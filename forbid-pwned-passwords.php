@@ -1,11 +1,10 @@
 <?php
 /*
 Plugin Name:  Forbid Pwned Passwords
-Plugin URI:   https://github.com/heyitsmikeyv/forbid-pwned-passwords
+Plugin URI:   https://github.com/joehanna/forbid-pwned-passwords
 Description:  Disallow usage of passwords found in the Have I Been Pwned breached password database.
 Version:      0.1.1
-Author:       Michael Veenstra
-Author URI:   https://michaelveenstra.com/
+Author:       @joehanna (orig Michael Veenstra)
 License:      GPL3
 License URI:  https://www.gnu.org/licenses/gpl-3.0.en.html
 Text Domain:  forbid_pwned_passwords
@@ -41,15 +40,32 @@ function fpp_checkpass($errors) {
 
     $fpp_pwn_count = fpp_hibp_check($_POST['pass1']);
     if ($fpp_pwn_count > 0) {
-	$errors->add( 'pass', __(
-	    "<strong>ERROR</strong>: The password you've provided has been identified in <strong>" .
-	    $fpp_pwn_count .
-      "</strong> known sets of breached credentials.<br />
-      The site administrator has applied restrictions preventing the use of such passwords.<br />
-      <strong>Please choose a different password</strong>. <a href='" .
-      esc_url("https://haveibeenpwned.com/Passwords") .
-      "'>Learn More</a>.",
+      // $errors->add( 'pass', __(
+      //   "<strong>ERROR</strong>: The password you've provided has been identified in <strong>" .
+      //   $fpp_pwn_count .
+      //   "</strong> known sets of breached credentials.<br />
+      //   The site administrator has applied restrictions preventing the use of such passwords.<br />
+      //   <strong>Please choose a different password</strong>. <a href='" .
+      //   esc_url("https://haveibeenpwned.com/Passwords") .
+      //   "'>Learn More</a>.",
+      //   'forbid_pwned_passwords'  ) );
+      // }
+    $errors->add( 'pass', __(
+      "<strong>Please choose a different password</strong>.<br /><br />
+      The password you've tried to use is not secure. It has been used <strong>" .
+      "</strong> in website breaches.<br /><br />
+      
+      HINT: Only if you would prefer, you can use 3 non-related words that are easy to remember: eg. <strong>milk ocean car</strong><br /><br />(but do not use this specific example!!!)",
       'forbid_pwned_passwords'  ) );
+    } else {
+      if ( $fpp_pwn_count == -999 ) {
+        $errors->add( 'pass', __(
+          "<strong>Please choose a different password</strong>.<br /><br />
+          Do not use the sample pass phrase!<br /><br />
+          
+          HINT: Only if you would prefer, you can use 3 non-related words that are easy to remember: eg. <strong>milk ocean car</strong><br /><br />(but do not use this specific example!!!)",
+          'forbid_pwned_passwords'  ) );        
+      }
     }
   }
 }
@@ -71,6 +87,11 @@ function fpp_checkpass($errors) {
  * @return	int
 */
 function fpp_hibp_check($pwd) {
+
+  if ( $pwd == 'milk ocean car' ) {
+    return -999;
+  }
+
   $api = 'https://api.pwnedpasswords.com/range/';
   $hash = sha1($pwd);
   $prefix = substr($hash, 0, 5);
